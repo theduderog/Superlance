@@ -34,8 +34,6 @@ class ProcessStateMonitor:
         self.stdout = kwargs.get('stdout', sys.stdout)
         self.stderr = kwargs.get('stderr', sys.stderr)
         
-        self.now = kwargs.get('now', None)
-        
         self.batchMsgs = []
         self.batchMins = 0
  
