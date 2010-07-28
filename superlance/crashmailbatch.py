@@ -52,44 +52,17 @@ import os
 import sys
 
 from supervisor import childutils
+from superlance.process_state_email_monitor import ProcessStateEmailMonitor
 
-class CrashMailBatch:
+class CrashMailBatch(ProcessStateEmailMonitor):
+    
+    processStateEvents = ['PROCESS_STATE_EXITED']
 
     def __init__(self, **kwargs):
-        self.interval = kwargs.get('interval', 1)
-        self.fromEmail = kwargs['fromEmail']
-        self.toEmail = kwargs['toEmail']
-        self.subject = kwargs.get('subject', 'Alert from supervisord')
-        
-        self.debug = kwargs.get('debug', False)
-        self.stdin = kwargs.get('stdin', sys.stdin)
-        self.stdout = kwargs.get('stdout', sys.stdout)
-        self.stderr = kwargs.get('stderr', sys.stderr)
-        
+        ProcessStateEmailMonitor.__init__(self, **kwargs)
         self.now = kwargs.get('now', None)
-        
-        self.batchMsgs = []
-        self.batchMins = 0
  
-    def run(self):
-        while 1:
-            hdrs, payload = childutils.listener.wait(self.stdin, self.stdout)
-            self.handleEvent(hdrs, payload)
-            childutils.listener.ok(self.stdout)
-    
-    def handleEvent(self, headers, payload):
-        if headers['eventname'] == 'PROCESS_STATE_EXITED':
-            self.handleProcessExitEvent(headers, payload)
-        elif headers['eventname'] == 'TICK_60':
-            self.handleTick60Event(headers, payload)
-    
-    def handleProcessExitEvent(self, headers, payload):
-        msg = self.generateProcessExitMsg(headers, payload)
-        if msg:
-            self.writeToStderr(msg)
-            self.batchMsgs.append(msg)
-    
-    def generateProcessExitMsg(self, headers, payload):
+    def generateProcessStateChangeMsg(self, headers, payload):
         pheaders, pdata = childutils.eventdata(payload+'\n')
         
         if int(pheaders['expected']):
@@ -98,54 +71,6 @@ class CrashMailBatch:
         txt = 'Process %(groupname)s:%(processname)s (pid %(pid)s) died \
 unexpectedly' % pheaders
         return '%s -- %s' % (childutils.get_asctime(self.now), txt)
-
-    def handleTick60Event(self, headers, payload):
-        self.batchMins += 1
-        if self.batchMins >= self.interval:
-            self.sendBatch()
-            
-    def sendBatch(self):
-        email = self.getBatchEmail()
-        if email:
-            self.sendEmail(email)
-        self.clearBatch()
-    
-    def getBatchMinutes(self):
-        return self.batchMins
-    
-    def getBatchMsgs(self):
-        return self.batchMsgs
-        
-    def clearBatch(self):
-        self.batchMins = 0;
-        self.batchMsgs = [];
-    
-    def getBatchEmail(self):
-        if len(self.batchMsgs):
-            return {
-                'to': self.toEmail,
-                'from': self.fromEmail,
-                'subject': self.subject,
-                'body': '\n'.join(self.getBatchMsgs()),
-            }
-        return None
-        
-    def sendEmail(self, email):
-        import smtplib
-        from email.mime.text import MIMEText
-        
-        msg = MIMEText(email['body'])
-        msg['Subject'] = email['subject']
-        msg['From'] = email['from']
-        msg['To'] = email['to']
-
-        s = smtplib.SMTP('localhost')
-        s.sendmail(email['from'], [email['to']], msg.as_string())
-        s.quit()
-
-    def writeToStderr(self, msg):
-        self.stderr.write(msg)
-        self.stderr.flush()
 
 def main():
     from optparse import OptionParser
