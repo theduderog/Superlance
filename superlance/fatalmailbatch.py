@@ -20,12 +20,12 @@
 # A supervisor config snippet that tells supervisor to use this script
 # as a listener is below.
 #
-# [eventlistener:crashmailbatch]
-# command=python crashmailbatch
+# [eventlistener:fatalmailbatch]
+# command=python fatalmailbatch
 # events=PROCESS_STATE,TICK_60
 
 doc = """\
-crashmailbatch.py [--interval=<batch interval in minutes>]
+fatalmailbatch.py [--interval=<batch interval in minutes>]
         [--toEmail=<email address>]
         [--fromEmail=<email address>]
         [--subject=<email subject>]
@@ -44,7 +44,7 @@ Options:
 
 A sample invocation:
 
-crashmailbatch.py --toEmail="you@bar.com" --fromEmail="me@bar.com"
+fatalmailbatch.py --toEmail="you@bar.com" --fromEmail="me@bar.com"
 
 """
 
@@ -52,27 +52,25 @@ from supervisor import childutils
 from superlance.process_state_email_monitor \
     import ProcessStateEmailMonitor, createFromCmdLine
 
-class CrashMailBatch(ProcessStateEmailMonitor):
+class FatalMailBatch(ProcessStateEmailMonitor):
     
-    processStateEvents = ['PROCESS_STATE_EXITED']
+    processStateEvents = ['PROCESS_STATE_FATAL']
 
     def __init__(self, **kwargs):
         ProcessStateEmailMonitor.__init__(self, **kwargs)
         self.now = kwargs.get('now', None)
  
     def getProcessStateChangeMsg(self, headers, payload):
+        self.writeToStderr('headers: %s, payload %s' % (headers, payload))
         pheaders, pdata = childutils.eventdata(payload+'\n')
-        
-        if int(pheaders['expected']):
-            return None
-        
-        txt = 'Process %(groupname)s:%(processname)s (pid %(pid)s) died \
-unexpectedly' % pheaders
+
+        txt = 'Process %(groupname)s:%(processname)s failed to start too many \
+times' % pheaders
         return '%s -- %s' % (childutils.get_asctime(self.now), txt)
 
 def main():
-    crash = createFromCmdLine(CrashMailBatch)
-    crash.run()
+    fatal = createFromCmdLine(FatalMailBatch)
+    fatal.run()
 
 if __name__ == '__main__':
     main()

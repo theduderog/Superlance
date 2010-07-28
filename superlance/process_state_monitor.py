@@ -52,7 +52,7 @@ class ProcessStateMonitor:
             self.handleTick60Event(headers, payload)
     
     def handleProcessStateChangeEvent(self, headers, payload):
-        msg = self.generateProcessStateChangeMsg(headers, payload)
+        msg = self.getProcessStateChangeMsg(headers, payload)
         if msg:
             self.writeToStderr(msg)
             self.batchMsgs.append(msg)
@@ -60,7 +60,7 @@ class ProcessStateMonitor:
     """
     Override this method in child classes to customize messaging
     """
-    def generateProcessStateChangeMsg(self, headers, payload):
+    def getProcessStateChangeMsg(self, headers, payload):
         return None
 
     def handleTick60Event(self, headers, payload):

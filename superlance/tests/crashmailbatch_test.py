@@ -28,26 +28,25 @@ class CrashMailBatchTests(unittest.TestCase):
         obj.sendEmail = mock.Mock()
         return obj
 
-    def getProcessExitedEvent(self, pname, gname, expected,
-                                eventname='PROCESS_STATE_EXITED'):
+    def getProcessExitedEvent(self, pname, gname, expected):
         headers = {
             'ver': '3.0', 'poolserial': '7', 'len': '71',
-            'server': 'supervisor', 'eventname': eventname,
+            'server': 'supervisor', 'eventname': 'PROCESS_STATE_EXITED',
             'serial': '7', 'pool': 'checkmailbatch',
         }
         payload = 'processname:%s groupname:%s from_state:RUNNING expected:%d \
 pid:58597' % (pname, gname, expected)
         return (headers, payload)
         
-    def test_generateProcessStateChangeMsg_expected(self):
+    def test_getProcessStateChangeMsg_expected(self):
         crash = self._makeOneMocked()
         hdrs, payload = self.getProcessExitedEvent('foo', 'bar', 1)
-        self.assertEquals(None, crash.generateProcessStateChangeMsg(hdrs, payload))
+        self.assertEquals(None, crash.getProcessStateChangeMsg(hdrs, payload))
 
-    def test_generateProcessStateChangeMsg_unexpected(self):
+    def test_getProcessStateChangeMsg_unexpected(self):
         crash = self._makeOneMocked()
         hdrs, payload = self.getProcessExitedEvent('foo', 'bar', 0)
-        msg = crash.generateProcessStateChangeMsg(hdrs, payload)
+        msg = crash.getProcessStateChangeMsg(hdrs, payload)
         self.assertEquals(self.unexpectedErrorMsg, msg)
         
     def test_handleEvent_exit_expected(self):

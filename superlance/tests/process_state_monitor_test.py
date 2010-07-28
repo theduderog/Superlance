@@ -8,7 +8,7 @@ class TestProcessStateMonitor(ProcessStateMonitor):
     
     processStateEvents = ['PROCESS_STATE_EXITED']
             
-    def generateProcessStateChangeMsg(self, headers, payload):
+    def getProcessStateChangeMsg(self, headers, payload):
         return repr(payload)
 
 class ProcessStateMonitorTests(unittest.TestCase):

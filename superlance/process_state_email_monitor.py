@@ -12,6 +12,8 @@
 # FITNESS FOR A PARTICULAR PURPOSE
 #
 ##############################################################################
+import os
+import sys
 import smtplib
 from email.mime.text import MIMEText
 from superlance.process_state_monitor import ProcessStateMonitor
@@ -20,6 +22,33 @@ doc = """\
 Base class for common functionality when monitoring process state changes
 and sending email notification
 """
+
+def createFromCmdLine(klass):
+    from optparse import OptionParser
+    
+    parser = OptionParser()
+    parser.add_option("-i", "--interval", dest="interval", type="int",
+                      help="batch interval in minutes (defaults to 1 minute)")
+    parser.add_option("-t", "--toEmail", dest="toEmail",
+                      help="destination email address")
+    parser.add_option("-f", "--fromEmail", dest="fromEmail",
+                      help="source email address")
+    parser.add_option("-s", "--subject", dest="subject",
+                      help="email subject")
+    (options, args) = parser.parse_args()
+    
+    if not options.toEmail:
+        parser.print_help()
+        sys.exit(1)
+    if not options.fromEmail:
+        parser.print_help()
+        sys.exit(1)
+        
+    if not 'SUPERVISOR_SERVER_URL' in os.environ:
+        sys.stderr.write('Must run as a supervisor event listener\n')
+        sys.exit(1)
+        
+    return klass(**options.__dict__)
 
 class ProcessStateEmailMonitor(ProcessStateMonitor):
 
