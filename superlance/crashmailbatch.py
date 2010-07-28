@@ -49,8 +49,7 @@ crashmailbatch.py --toEmail="you@bar.com" --fromEmail="me@bar.com"
 """
 
 from supervisor import childutils
-from superlance.process_state_email_monitor \
-    import ProcessStateEmailMonitor, createFromCmdLine
+from superlance.process_state_email_monitor import ProcessStateEmailMonitor
 
 class CrashMailBatch(ProcessStateEmailMonitor):
     
@@ -71,7 +70,7 @@ unexpectedly' % pheaders
         return '%s -- %s' % (childutils.get_asctime(self.now), txt)
 
 def main():
-    crash = createFromCmdLine(CrashMailBatch)
+    crash = CrashMailBatch.createFromCmdLine()
     crash.run()
 
 if __name__ == '__main__':
