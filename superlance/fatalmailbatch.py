@@ -56,6 +56,7 @@ class FatalMailBatch(ProcessStateEmailMonitor):
     processStateEvents = ['PROCESS_STATE_FATAL']
 
     def __init__(self, **kwargs):
+        kwargs['subject'] = kwargs.get('subject', 'Fatal start alert from supervisord')
         ProcessStateEmailMonitor.__init__(self, **kwargs)
         self.now = kwargs.get('now', None)
  

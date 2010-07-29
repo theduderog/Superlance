@@ -56,6 +56,7 @@ class CrashMailBatch(ProcessStateEmailMonitor):
     processStateEvents = ['PROCESS_STATE_EXITED']
 
     def __init__(self, **kwargs):
+        kwargs['subject'] = kwargs.get('subject', 'Crash alert from supervisord')
         ProcessStateEmailMonitor.__init__(self, **kwargs)
         self.now = kwargs.get('now', None)
  
