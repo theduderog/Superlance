@@ -52,7 +52,7 @@ class ProcessStateMonitor:
     def handleProcessStateChangeEvent(self, headers, payload):
         msg = self.getProcessStateChangeMsg(headers, payload)
         if msg:
-            self.writeToStderr(msg)
+            self.writeToStderr('%s\n' % msg)
             self.batchMsgs.append(msg)
 
     """

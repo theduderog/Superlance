@@ -61,7 +61,7 @@ pid:58597' % (pname, gname, expected)
         hdrs, payload = self.getProcessExitedEvent('foo', 'bar', 0)
         crash.handleEvent(hdrs, payload)
         self.assertEquals([self.unexpectedErrorMsg], crash.getBatchMsgs())
-        self.assertEquals(self.unexpectedErrorMsg, crash.stderr.getvalue())
+        self.assertEquals('%s\n' % self.unexpectedErrorMsg, crash.stderr.getvalue())
 
 if __name__ == '__main__':
     unittest.main()         

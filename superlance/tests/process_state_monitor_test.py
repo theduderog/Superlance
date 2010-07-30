@@ -51,7 +51,7 @@ pid:58597' % (pname, gname, expected)
         monitor.handleEvent(hdrs, payload)
         unexpectedErrorMsg = repr(payload)
         self.assertEquals([unexpectedErrorMsg], monitor.getBatchMsgs())
-        self.assertEquals(unexpectedErrorMsg, monitor.stderr.getvalue())
+        self.assertEquals('%s\n' % unexpectedErrorMsg, monitor.stderr.getvalue())
 
     def test_handleEvent_non_exit(self):
         monitor = self._makeOneMocked()
