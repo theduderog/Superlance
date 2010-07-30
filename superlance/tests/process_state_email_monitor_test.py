@@ -9,7 +9,8 @@ class ProcessStateEmailMonitorTests(unittest.TestCase):
     subject = 'Test Alert'
     
     def _getTargetClass(self):
-        from superlance.process_state_email_monitor import ProcessStateEmailMonitor
+        from superlance.process_state_email_monitor \
+        import ProcessStateEmailMonitor
         return ProcessStateEmailMonitor
         
     def _makeOneMocked(self, **kwargs):
@@ -41,6 +42,51 @@ class ProcessStateEmailMonitorTests(unittest.TestCase):
             'subject': 'Test Alert',
         }
         self.assertEquals(expected, emailCallArgs[0])
+        
+        #Test that email was logged
+        self.assertEquals("""Sending notification email:
+To: testTo@blah.com
+From: testFrom@blah.com
+Subject: Test Alert
+Body:
+msg1
+msg2
+""", monitor.stderr.getvalue())
+        
+    def test_logEmail_with_body_digest(self):
+        monitor = self._makeOneMocked()
+        email = {
+            'to': 'you@fubar.com',
+            'from': 'me@fubar.com',
+            'subject': 'yo yo',
+            'body': 'a' * 30,
+        }
+        monitor.logEmail(email)
+        self.assertEquals("""Sending notification email:
+To: you@fubar.com
+From: me@fubar.com
+Subject: yo yo
+Body:
+aaaaaaaaaaaaaaaaaaaa...
+""", monitor.stderr.getvalue())
+        self.assertEquals('a' * 30, email['body'])
+
+    def test_logEmail_without_body_digest(self):
+        monitor = self._makeOneMocked()
+        email = {
+            'to': 'you@fubar.com',
+            'from': 'me@fubar.com',
+            'subject': 'yo yo',
+            'body': 'a' * 20,
+        }
+        monitor.logEmail(email)
+        self.assertEquals("""Sending notification email:
+To: you@fubar.com
+From: me@fubar.com
+Subject: yo yo
+Body:
+aaaaaaaaaaaaaaaaaaaa
+""", monitor.stderr.getvalue())
 
 if __name__ == '__main__':
     unittest.main()

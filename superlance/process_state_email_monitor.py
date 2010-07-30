@@ -15,6 +15,7 @@
 import os
 import sys
 import smtplib
+import copy
 from email.mime.text import MIMEText
 from superlance.process_state_monitor import ProcessStateMonitor
 
@@ -59,11 +60,20 @@ class ProcessStateEmailMonitor(ProcessStateMonitor):
         self.fromEmail = kwargs['fromEmail']
         self.toEmail = kwargs['toEmail']
         self.subject = kwargs.get('subject', 'Alert from supervisord')
+        self.digestLen = 20
             
     def sendBatchNotification(self):
         email = self.getBatchEmail()
         if email:
             self.sendEmail(email)
+            self.logEmail(email)
+
+    def logEmail(self, email):
+        email4Log = copy.copy(email)
+        if len(email4Log['body']) > self.digestLen:
+            email4Log['body'] = '%s...' % email4Log['body'][:self.digestLen]
+        self.writeToStderr("Sending notification email:\nTo: %(to)s\n\
+From: %(from)s\nSubject: %(subject)s\nBody:\n%(body)s\n" % email4Log)
             
     def getBatchEmail(self):
         if len(self.batchMsgs):
